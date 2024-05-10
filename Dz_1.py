@@ -8,7 +8,7 @@ def login():
     if request.method == 'GET':
         return f'please login'
     else:
-        return f'you are have registered'
+        return f'you are logged-in '
 
 
 @app.route('/user', methods=['GET', 'POST', 'PUT'])
