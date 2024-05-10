@@ -7,8 +7,8 @@ app = Flask(__name__)
 def login():
     if request.method == 'GET':
         return f'please login'
-    else:
-        return f'you are logged-in '
+    if request.method == 'POST':
+        return f'you are logged-in'
 
 
 @app.route('/user', methods=['GET', 'POST', 'PUT'])
