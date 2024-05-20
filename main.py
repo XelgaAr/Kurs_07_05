@@ -160,7 +160,7 @@ def register():
 
 
 @app.route('/user/<user_id>/resources', methods=['GET'])
-def fitness_center_id_loyalty_programs(user_id):
+def user_resources(user_id):
     if request.method == 'GET':
         res = get_from_db(f'SELECT * from resources where user_id = {user_id}')
         return res
