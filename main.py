@@ -73,10 +73,11 @@ def user_reservations_id(reservation_id):
         return f'delete reservation with id: {reservation_id}'
 
 
-@app.route('/user/checkout ', methods=['GET', 'POST', 'PUT'])
+@app.route('/user/checkout', methods=['GET', 'POST', 'PUT'])
 def user_checkout():
     if request.method == 'GET':
-        return f'info about user checkout'
+        res = get_from_db(f'SELECT * from checkout ')
+        return res
     if request.method == 'POST':
         return f'create user checkout'
     if request.method == 'PUT':
@@ -158,7 +159,9 @@ def register():
         return f'you are registered'
 
 
-@app.route('/fitness_center/<fitness_center_id>/loyalty_programs', methods=['GET'])
-def fitness_center_id_loyalty_programs(fitness_center_id):
+@app.route('/user/<user_id>/resources', methods=['GET'])
+def fitness_center_id_loyalty_programs(user_id):
     if request.method == 'GET':
-        return f'info about loyalty_programs in fitness center with id :{fitness_center_id}'
+        res = get_from_db(f'SELECT * from resources where user_id = {user_id}')
+        return res
+
