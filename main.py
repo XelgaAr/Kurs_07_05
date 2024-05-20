@@ -32,14 +32,6 @@ def insert_into_db(query):
     con.close()
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'GET':
-        return f'please login'
-    if request.method == 'POST':
-        return f'you are logged-in'
-
-
 @app.route('/user', methods=['GET', 'POST', 'PUT'])
 def user():
     if request.method == 'GET':

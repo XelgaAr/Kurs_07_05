@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fa642c14-3bc1-4f64-aa31-f5955dc717f1" name="Changes" comment="Dz_1">
-      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dz_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dz_1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="fa642c14-3bc1-4f64-aa31-f5955dc717f1" name="Changes" comment="Dz_4" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,7 +47,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Flask server.Flask (main.py).executor": "Debug",
+    "Flask server.Flask (main.py).executor": "Run",
     "Flask server.Flask (main.py:flask).executor": "Debug",
     "Python.main.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
@@ -142,7 +137,7 @@
       <workItem from="1716110952166" duration="440000" />
       <workItem from="1716114632940" duration="7667000" />
       <workItem from="1716144045919" duration="3351000" />
-      <workItem from="1716198296305" duration="5837000" />
+      <workItem from="1716198296305" duration="6221000" />
     </task>
     <task id="LOCAL-00001" summary="Dz_1">
       <option name="closed" value="true" />
@@ -168,7 +163,15 @@
       <option name="project" value="LOCAL" />
       <updated>1715372948445</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Dz_4">
+      <option name="closed" value="true" />
+      <created>1716229932658</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1716229932658</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -176,11 +179,12 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Dz_1" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dz_1" />
+    <MESSAGE value="Dz_4" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dz_4" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/pythonProject$main.coverage" NAME="main Coverage Results" MODIFIED="1716146182228" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_flask_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1716143369913" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1716229687217" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1716229782362" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>
