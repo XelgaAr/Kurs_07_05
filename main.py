@@ -46,33 +46,38 @@ class SQLiteDatabase:
         if self.connection:
             self.connection.close()
 
-    def fetch_all(self, table, condition=None, join_table=None, join_condition=None):
-        query = f"SELECT * FROM{table}"
-        condition = []
+    def fetch_all(self, table, condition=None, join_table=None, join_condition=None, single=False):
+        query = f"SELECT * FROM {table}"
+        conditions = []
 
         if join_table is not None:
             join_cond_list = []
             for key, val in join_condition.items():
-                join_cond_list.append(f" {key}={val} ")
+                join_cond_list.append(f" {key}='{val}' ")
             join_cond_str = ' and '.join(join_cond_list)
-            join_str = f' join{join_table} ON {join_cond_str}'
+            join_str = f' join {join_table} ON {join_cond_str} '
             query = query + join_str
 
         if condition is not None:
-            for key, val in join_condition.items():
-                condition.append(f" {key}={val} ")
-            str_conditions = ' and '.join(condition)
+            for key, val in condition.items():
+                conditions.append(f" {key}='{val}' ")
+            str_conditions = ' and '.join(conditions)
             str_conditions = ' where ' + str_conditions
             query = query + str_conditions
 
+        print(query)
+
         cursor = self.connection.cursor()
         cursor.execute(query)
-        res = cursor.fetchall()
+        if single:
+            res = cursor.fetchone()
+        else:
+            res = cursor.fetchall()
         if res:
             return res
         return None
 
-    def fetch_one(self, query, *args, **kwargs):
+    def fetch_one_query(self, query, *args, **kwargs):
         cursor = self.connection.cursor()
         cursor.execute(query, *args, **kwargs)
         res = cursor.fetchone()
@@ -80,7 +85,10 @@ class SQLiteDatabase:
             return res
         return None
 
-    def insert(self, teble, data):
+    def fetch_one(self, table, condition=None, join_table=None, join_condition=None):
+        return self.fetch_all(table, condition, join_table, join_condition, single=True)
+
+    def insert(self, table, data):
         keys = []
         vals = []
         for key, value in data.items():
@@ -88,7 +96,7 @@ class SQLiteDatabase:
             vals.append("'" + str(value) + "'")
         str_keys = ', '.join(keys)
         str_vals = ', '.join(vals)
-        query = f"""INSERT INTO {teble} ({str_keys}) VALUES ({str_vals}) """
+        query = f"""INSERT INTO {table} ({str_keys}) VALUES ({str_vals}) """
         cursor = self.connection.cursor()
         cursor.execute(query)
         self.connection.commit()
@@ -110,7 +118,7 @@ def user():
 def user_funds(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('user', {'id':user_id})
+            res = db.fetch_all('user', {'id': user_id})
         return render_template('funds.html', funds=res)
 
     if request.method == 'POST':
@@ -131,7 +139,7 @@ def user_reservations():
 def user_reservations_id(reservation_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('reservation', {'id':reservation_id})
+            res = db.fetch_one('reservation', {'id': reservation_id})
         return res
 
     if request.method == 'POST':
@@ -164,7 +172,7 @@ def fitness_center():
 def fitness_center_id(fitness_center_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('fitness_center', {'id':fitness_center_id})
+            res = db.fetch_one('fitness_center', {'id': fitness_center_id})
         return res
 
 
@@ -172,7 +180,7 @@ def fitness_center_id(fitness_center_id):
 def fitness_center_trainer(fitness_center_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('trainer', {'id':fitness_center_id})
+            res = db.fetch_all('trainer', {'id': fitness_center_id})
         return res
 
 
@@ -180,49 +188,47 @@ def fitness_center_trainer(fitness_center_id):
 def fitness_center_trainer_id(fitness_center_id, trainer_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('trainer', {'fitness_center_id':fitness_center_id, 'id':trainer_id})
+            res = db.fetch_one('trainer', {'fitness_center_id': fitness_center_id, 'id': trainer_id})
         return res
 
 
-
-@app.route('/fitness_center/<fitness_center_id>/trainer/<trainer_id>/rating', methods=['GET', 'POST', 'PUT'])
-def fitness_center_trainer_id_rating(fitness_center_id, trainer_id):
+@app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST', 'PUT'])
+def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
-        return f'info about rating trainer with id:{trainer_id} from fitness center with id :{fitness_center_id}'
+        with SQLiteDatabase('db.db') as db:
+            info = db.fetch_all('rating', {'trainer_id': trainer_id})
+        return f"Info about trainer with id:{trainer_id} rating:<br>{info}"
     if request.method == 'POST':
-        return f'create rating trainer with id:{trainer_id} from fitness center with id :{fitness_center_id}'
+        return f'create rating trainer with id:{trainer_id}'
     if request.method == 'PUT':
-        return f'change rating trainer with id:{trainer_id} from fitness center with id :{fitness_center_id} '
+        return f'change rating trainer with id:{trainer_id}'
 
 
 @app.route('/fitness_center/<fitness_center_id>/services', methods=['GET'])
 def fitness_center_services(fitness_center_id):
     if request.method == 'GET':
-        return f'info about services in fitness center with id :{fitness_center_id}'
+        with SQLiteDatabase('db.db') as db:
+            info = db.fetch_all('service', {'fitness_center_id': fitness_center_id})
+        return f'Info about services in fitness center with id :{fitness_center_id}:<br>{info}'
 
-
-@app.route('/fitness_center/<fitness_center_id>/services/<service_id>', methods=['GET'])
-def fitness_center_services_id(fitness_center_id, services_id):
-    if request.method == 'GET':
-        return f'info about services with id:{services_id} in fitness center with id :{fitness_center_id}'
 
 def check_credentials(username, password):
     with SQLiteDatabase('db.db') as db:
-        user = db.fetch_one('user', {'username':username, 'password':password})
-    return user is not None
+        user_found = db.fetch_one('user', {'login': username, 'password': password})
+    return user_found is not None
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def get_login():
+    if request.method == 'GET':
+        return render_template('login.html')
     if request.method == 'POST':
         login = request.form['login']
         password = request.form['password']
         if check_credentials(login, password):
-            return 'succesful login'
+            return 'Successful login'
         else:
             return 'Incorrect login or password'
-    else:
-        return render_template('login.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -232,11 +238,14 @@ def register():
     if request.method == 'POST':
         form_data = request.form
         with SQLiteDatabase('db.db') as db:
-            db.insert("user", {'login':form_data['login'], 'password':form_data['password'], 'birth_date':form_data['birth_date'], 'phone':form_data['phone']})
+            db.insert("user", {'login': form_data['login'], 'password': form_data['password'],
+                               'birth_date': form_data['birth_date'], 'phone': form_data['phone']})
         return f'you are registered'
+
+
 @app.route('/user/<user_id>/resources', methods=['GET'])
 def user_resources(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('resources', {'user_id':user_id})
-        return res
+            res = db.fetch_all('resources', {'user_id': user_id})
+        return res or 'No info about current user resources'
