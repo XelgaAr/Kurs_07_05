@@ -114,6 +114,17 @@ def user():
         return f'change user info'
 
 
+@app.route('/user/<user_id>', methods=['GET', 'POST'])
+def user_info(user_id):
+    if request.method == 'GET':
+        with SQLiteDatabase('db.db') as db:
+            res = db.fetch_one_query(f'SELECT login, phone, birth_date, funds FROM user WHERE id={user_id}')
+        return render_template('user_info.html', user_info=res)
+
+    if request.method == 'POST':
+        return f'add funds'
+
+
 @app.route('/user/<user_id>/funds', methods=['GET', 'POST'])
 def user_funds(user_id):
     if request.method == 'GET':
