@@ -114,6 +114,17 @@ def user():
         return f'change user info'
 
 
+@app.route('/user/<user_id>', methods=['GET', 'POST'])
+def user_info(user_id):
+    if request.method == 'GET':
+        with SQLiteDatabase('db.db') as db:
+            res = db.fetch_one_query(f'SELECT login, phone, birth_date, funds FROM user WHERE id={user_id}')
+        return render_template('user_info.html', user_info=res)
+
+    if request.method == 'POST':
+        return f'add funds'
+
+
 @app.route('/user/<user_id>/funds', methods=['GET', 'POST'])
 def user_funds(user_id):
     if request.method == 'GET':
@@ -192,16 +203,19 @@ def fitness_center_trainer_id(fitness_center_id, trainer_id):
         return res
 
 
-@app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST', 'PUT'])
+@app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST'])
 def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            info = db.fetch_all('rating', {'trainer_id': trainer_id})
-        return f"Info about trainer with id:{trainer_id} rating:<br>{info}"
+        return render_template('rating.html')
     if request.method == 'POST':
-        return f'create rating trainer with id:{trainer_id}'
-    if request.method == 'PUT':
-        return f'change rating trainer with id:{trainer_id}'
+        form_data = request.form
+        with SQLiteDatabase('db.db') as db:
+            user_found = db.fetch_one('user', {'login': form_data['login'], 'password': form_data['password']})
+            db.insert("rating", {'user_id': user_found['id'],
+                                 'points': form_data['points'], 'text': form_data['text'],
+                                 'trainer_id': form_data['trainer_id']})
+        return f'created rating trainer with id:{trainer_id}'
+
 
 
 @app.route('/fitness_center/<fitness_center_id>/services', methods=['GET'])
