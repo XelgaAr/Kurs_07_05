@@ -1,7 +1,11 @@
-from flask import Flask, request, render_template
+import os
+
+from flask import Flask, request, render_template, session, redirect
 import sqlite3
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET_KEY")
 
 
 def dict_factory(cursor, row):
@@ -101,8 +105,32 @@ class SQLiteDatabase:
         cursor.execute(query)
         self.connection.commit()
 
+def check_credentials(username, password):
+    with SQLiteDatabase('db.db') as db:
+        user = db.fetch_one('user', {'login': username, 'password': password})
+    return user is not None
 
-@app.route('/user', methods=['GET', 'POST', 'PUT'])
+
+def logion_required(func):
+    @wraps(func)
+    def wr1(*args, **kwargs):
+        if session.get('user_id') is None:
+            return redirect('/login')
+        results = func(*args, **kwargs)
+        return results
+
+    return wr1
+
+
+app.route('/', methods=['GET'])
+
+
+def index():
+    return 'Welcome to homepage!'
+
+
+@app.route('/user', methods=['GET', 'POST'])
+@logion_required
 def user():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -115,6 +143,7 @@ def user():
 
 
 @app.route('/user/<user_id>', methods=['GET', 'POST'])
+@logion_required
 def user_info(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -126,6 +155,7 @@ def user_info(user_id):
 
 
 @app.route('/user/<user_id>/funds', methods=['GET', 'POST'])
+@logion_required
 def user_funds(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -137,6 +167,7 @@ def user_funds(user_id):
 
 
 @app.route('/user/reservations', methods=['GET', 'POST'])
+@logion_required
 def user_reservations():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -146,7 +177,8 @@ def user_reservations():
         return f'create reservations'
 
 
-@app.route('/user/reservations/<reservation_id>', methods=['GET', 'POST', 'DELETE'])
+@app.route('/user/reservations/<reservation_id>', methods=['GET', 'POST'])
+@logion_required
 def user_reservations_id(reservation_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -155,11 +187,16 @@ def user_reservations_id(reservation_id):
 
     if request.method == 'POST':
         return f'create reservation with id: {reservation_id}'
-    if request.method == 'DELETE':
-        return f'delete reservation with id: {reservation_id}'
+
+
+@app.route('/user/reservations/<reservation_id>/delete', methods=['GET'])
+@logion_required
+def user_reservations_delete(reservation_id):
+    return 0
 
 
 @app.route('/user/checkout', methods=['GET', 'POST', 'PUT'])
+@logion_required
 def user_checkout():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
@@ -204,6 +241,7 @@ def fitness_center_trainer_id(fitness_center_id, trainer_id):
 
 
 @app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST'])
+@logion_required
 def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
         return render_template('rating.html')
@@ -217,7 +255,6 @@ def fitness_center_trainer_id_rating(trainer_id):
         return f'created rating trainer with id:{trainer_id}'
 
 
-
 @app.route('/fitness_center/<fitness_center_id>/services', methods=['GET'])
 def fitness_center_services(fitness_center_id):
     if request.method == 'GET':
@@ -226,10 +263,6 @@ def fitness_center_services(fitness_center_id):
         return f'Info about services in fitness center with id :{fitness_center_id}:<br>{info}'
 
 
-def check_credentials(username, password):
-    with SQLiteDatabase('db.db') as db:
-        user_found = db.fetch_one('user', {'login': username, 'password': password})
-    return user_found is not None
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -240,9 +273,19 @@ def get_login():
         login = request.form['login']
         password = request.form['password']
         if check_credentials(login, password):
-            return 'Successful login'
+            with SQLiteDatabase('db.db') as db:
+                user = db.fetch_one("user", {'login': login})
+                session['user_id'] = user['id']
+            return redirect(f'/user/{user['id']}')
         else:
             return 'Incorrect login or password'
+
+
+@app.route('/loguot', methods=['GET'])
+@logion_required
+def logout():
+    session.pop('user_id', None)
+    return redirect('/login')
 
 
 @app.route('/register', methods=['GET', 'POST'])
