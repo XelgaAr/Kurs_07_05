@@ -1,117 +1,20 @@
 import os
 
 from flask import Flask, request, render_template, session, redirect
-import sqlite3
 from functools import wraps
+from utils import SQLiteDatabase
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET_KEY")
 
 
-def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
-
-
-def get_from_db(query, many=True):
-    con = sqlite3.connect('db.db')
-    con.row_factory = dict_factory
-    cur = con.cursor()
-    cur.execute(query)
-    if many:
-        res = cur.fetchall()
-    else:
-        res = cur.fetchone()
-    con.close()
-    return res
-
-
-def insert_into_db(query):
-    con = sqlite3.connect('db.db')
-    cur = con.cursor()
-    cur.execute(query)
-    con.commit()
-    con.close()
-
-
-class SQLiteDatabase:
-    def __init__(self, db_path):
-        self.db_path = db_path
-        self.connection = None
-
-    def __enter__(self):
-        self.connection = sqlite3.connect(self.db_path)
-        self.connection.row_factory = dict_factory
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.connection:
-            self.connection.close()
-
-    def fetch_all(self, table, condition=None, join_table=None, join_condition=None, single=False):
-        query = f"SELECT * FROM {table}"
-        conditions = []
-
-        if join_table is not None:
-            join_cond_list = []
-            for key, val in join_condition.items():
-                join_cond_list.append(f" {key}='{val}' ")
-            join_cond_str = ' and '.join(join_cond_list)
-            join_str = f' join {join_table} ON {join_cond_str} '
-            query = query + join_str
-
-        if condition is not None:
-            for key, val in condition.items():
-                conditions.append(f" {key}='{val}' ")
-            str_conditions = ' and '.join(conditions)
-            str_conditions = ' where ' + str_conditions
-            query = query + str_conditions
-
-        print(query)
-
-        cursor = self.connection.cursor()
-        cursor.execute(query)
-        if single:
-            res = cursor.fetchone()
-        else:
-            res = cursor.fetchall()
-        if res:
-            return res
-        return None
-
-    def fetch_one_query(self, query, *args, **kwargs):
-        cursor = self.connection.cursor()
-        cursor.execute(query, *args, **kwargs)
-        res = cursor.fetchone()
-        if res:
-            return res
-        return None
-
-    def fetch_one(self, table, condition=None, join_table=None, join_condition=None):
-        return self.fetch_all(table, condition, join_table, join_condition, single=True)
-
-    def insert(self, table, data):
-        keys = []
-        vals = []
-        for key, value in data.items():
-            keys.append(key)
-            vals.append("'" + str(value) + "'")
-        str_keys = ', '.join(keys)
-        str_vals = ', '.join(vals)
-        query = f"""INSERT INTO {table} ({str_keys}) VALUES ({str_vals}) """
-        cursor = self.connection.cursor()
-        cursor.execute(query)
-        self.connection.commit()
-
 def check_credentials(username, password):
     with SQLiteDatabase('db.db') as db:
-        user = db.fetch_one('user', {'login': username, 'password': password})
+        user = db.fetch('user', {'login': username, 'password': password}, fetch_all=False)
     return user is not None
 
 
-def logion_required(func):
+def login_required(func):
     @wraps(func)
     def wr1(*args, **kwargs):
         if session.get('user_id') is None:
@@ -122,19 +25,17 @@ def logion_required(func):
     return wr1
 
 
-app.route('/', methods=['GET'])
-
-
+@app.route('/', methods=['GET'])
 def index():
     return 'Welcome to homepage!'
 
 
 @app.route('/user', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def user():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('user')
+            res = db.fetch('user')
         return res
     if request.method == 'POST':
         return f'input user info'
@@ -143,11 +44,12 @@ def user():
 
 
 @app.route('/user/<user_id>', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def user_info(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one_query(f'SELECT login, phone, birth_date, funds FROM user WHERE id={user_id}')
+            res = db.fetch("user", f'id={user_id}', ["login", "phone", "birth_date", "funds"],
+                           fetch_all=False)
         return render_template('user_info.html', user_info=res)
 
     if request.method == 'POST':
@@ -155,11 +57,11 @@ def user_info(user_id):
 
 
 @app.route('/user/<user_id>/funds', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def user_funds(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('user', {'id': user_id})
+            res = db.fetch('user', {'id': user_id})
         return render_template('funds.html', funds=res)
 
     if request.method == 'POST':
@@ -167,22 +69,22 @@ def user_funds(user_id):
 
 
 @app.route('/user/reservations', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def user_reservations():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('reservations')
+            res = db.fetch('reservations')
         return res
     if request.method == 'POST':
         return f'create reservations'
 
 
 @app.route('/user/reservations/<reservation_id>', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def user_reservations_id(reservation_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('reservation', {'id': reservation_id})
+            res = db.fetch('reservation', {'id': reservation_id}, fetch_all=False)
         return res
 
     if request.method == 'POST':
@@ -190,17 +92,17 @@ def user_reservations_id(reservation_id):
 
 
 @app.route('/user/reservations/<reservation_id>/delete', methods=['GET'])
-@logion_required
+@login_required
 def user_reservations_delete(reservation_id):
     return 0
 
 
 @app.route('/user/checkout', methods=['GET', 'POST', 'PUT'])
-@logion_required
+@login_required
 def user_checkout():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('checkout')
+            res = db.fetch('checkout')
         return res
     if request.method == 'POST':
         return f'create user checkout'
@@ -212,7 +114,7 @@ def user_checkout():
 def fitness_center():
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('fitness_center')
+            res = db.fetch('fitness_center')
         return res
 
 
@@ -220,7 +122,7 @@ def fitness_center():
 def fitness_center_id(fitness_center_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('fitness_center', {'id': fitness_center_id})
+            res = db.fetch('fitness_center', {'id': fitness_center_id}, fetch_all=False)
         return res
 
 
@@ -228,7 +130,7 @@ def fitness_center_id(fitness_center_id):
 def fitness_center_trainer(fitness_center_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('trainer', {'id': fitness_center_id})
+            res = db.fetch('trainer', {'id': fitness_center_id})
         return res
 
 
@@ -236,19 +138,20 @@ def fitness_center_trainer(fitness_center_id):
 def fitness_center_trainer_id(fitness_center_id, trainer_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_one('trainer', {'fitness_center_id': fitness_center_id, 'id': trainer_id})
+            res = db.fetch('trainer', {'fitness_center_id': fitness_center_id, 'id': trainer_id}, fetch_all=False)
         return res
 
 
 @app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST'])
-@logion_required
+@login_required
 def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
         return render_template('rating.html')
     if request.method == 'POST':
         form_data = request.form
         with SQLiteDatabase('db.db') as db:
-            user_found = db.fetch_one('user', {'login': form_data['login'], 'password': form_data['password']})
+            user_found = db.fetch('user', {'login': form_data['login'], 'password': form_data['password']},
+                                  fetch_all=False)
             db.insert("rating", {'user_id': user_found['id'],
                                  'points': form_data['points'], 'text': form_data['text'],
                                  'trainer_id': form_data['trainer_id']})
@@ -259,10 +162,8 @@ def fitness_center_trainer_id_rating(trainer_id):
 def fitness_center_services(fitness_center_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            info = db.fetch_all('service', {'fitness_center_id': fitness_center_id})
+            info = db.fetch('service', {'fitness_center_id': fitness_center_id})
         return f'Info about services in fitness center with id :{fitness_center_id}:<br>{info}'
-
-
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -274,15 +175,15 @@ def get_login():
         password = request.form['password']
         if check_credentials(login, password):
             with SQLiteDatabase('db.db') as db:
-                user = db.fetch_one("user", {'login': login})
+                user = db.fetch("user", {'login': login}, fetch_all=False)
                 session['user_id'] = user['id']
             return redirect(f'/user/{user['id']}')
         else:
             return 'Incorrect login or password'
 
 
-@app.route('/loguot', methods=['GET'])
-@logion_required
+@app.route('/logout', methods=['GET'])
+@login_required
 def logout():
     session.pop('user_id', None)
     return redirect('/login')
@@ -304,5 +205,5 @@ def register():
 def user_resources(user_id):
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch_all('resources', {'user_id': user_id})
+            res = db.fetch('resources', {'user_id': user_id})
         return res or 'No info about current user resources'
