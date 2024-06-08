@@ -1,3 +1,4 @@
+import datetime
 import sqlite3
 
 
@@ -43,7 +44,7 @@ class SQLiteDatabase:
         if self.connection:
             self.connection.close()
 
-    def fetch(self, table, condition=None, columns=None, join=None, fetch_all=False):
+    def fetch(self, table, condition=None, columns=None, join=None, fetch_all=True):
         query = f"SELECT "
         if columns:
             query += ', '.join(columns)
@@ -52,13 +53,13 @@ class SQLiteDatabase:
         query += f' FROM {table}'
         if join:
             for join_table, join_condition in join.items():
-                query += f'JOIN {join_table} ON {join_condition}'
+                query += f' JOIN {join_table} ON {join_condition}'
         conditions = []
         if condition is not None:
             for key, val in condition.items():
                 conditions.append(f" {key}='{val}' ")
-            str_conditions = ' and '.join(conditions)
-            str_conditions = ' where ' + str_conditions
+            str_conditions = ' AND '.join(conditions)
+            str_conditions = ' WHERE ' + str_conditions
             query = query + str_conditions
 
         print(query)
@@ -93,12 +94,12 @@ def edit(self, table, data, condition):
     for key, val in data.items():
         update_values.append(f" {key}='{val}' ")
     set_clause = ', '.join(update_values)
-    query = f'UPDATE{table} SET{set_clause}'
+    query = f'UPDATE {table} SET {set_clause}'
     if condition is not None:
         for key, val in condition.items():
-            conditions.append(f"{key}='{val}")
-        str_conditions = 'AND '.join(conditions)
-        str_conditions = 'WHERE ' + str_conditions
+            conditions.append(f" {key}='{val}'")
+        str_conditions = ' AND '.join(conditions)
+        str_conditions = ' WHERE ' + str_conditions
         query = query + str_conditions
     cursor = self.connection.cursor()
     cursor.execute(query)
@@ -110,12 +111,13 @@ def calc_slots(user_id, trainer_id, service_id):
     join service on service.id = reservation.service_id
     where trainer_id = {trainer_id}"""
     with SQLiteDatabase('db.db') as db:
-        booked_time = db.fetch("reservation", {"trainer_id": trainer_id, "date": "25.10.2023"}, join = {'service': 'service.id = reservation.service_id'})
-        trainer_schedule = db.fetch("trainer_schedule", {"trainer_id":trainer_id, "date": "25.10.2023"}, fetch_all=False)
-        start_dt = datetime.datetime.strptime(trainer_schedule["date"]+ ' '+trainer_schedule["start_time"], "%d.%m.%Y %H:%M")
-        end_dt = datetime.datetime.strptime(trainer_schedule["date"] + ' ' + trainer_schedule["end_time"], "%d.%m.%Y %H:%M")
+        booked_time = db.fetch("reservation", {"trainer_id": trainer_id, "date": "25.10.2024"}, join={'service': 'service.id = reservation.service_id'})
+        trainer_schedule = db.fetch("trainer_schedule", {"trainer_id": trainer_id, "date": "25.10.2024"}, fetch_all=False)
+        trainer_capacity = db.fetch("trainer_services", {"trainer_id": trainer_id, "service_id": service_id}, fetch_all=False)
+        start_dt = datetime.datetime.strptime(trainer_schedule["date"]+' '+trainer_schedule["start_time"], '%d.%m.%Y %H:%M')
+        end_dt = datetime.datetime.strptime(trainer_schedule["date"]+' '+trainer_schedule["end_time"], '%d.%m.%Y %H:%M')
         curr_dt = start_dt
-        trainer_schedule ={}
+        trainer_schedule = {}
         while curr_dt < end_dt:
             trainer_schedule[curr_dt] = trainer_capacity['capacity']
             curr_dt += datetime.timedelta(minutes=15)
@@ -123,13 +125,15 @@ def calc_slots(user_id, trainer_id, service_id):
             booking_date = one_booking["date"]
             booking_time = one_booking["time"]
             booking_duration = one_booking["duration"]
-            one_booking_start = datetime.datetime.strptime(booking_date + " " + booking_time, "%d.%m.%Y %H:%M")
+            one_booking_start = datetime.datetime.strptime(booking_date + " " + booking_time, '%d.%m.%Y %H:%M')
             booking_end = one_booking_start + datetime.timedelta(minutes=booking_duration)
             curr_dt = one_booking_start
             while curr_dt < booking_end:
-                trainer_schedule[curr_dt] -= 1
+                if curr_dt in trainer_schedule:
+                    trainer_schedule[curr_dt] -= 1
                 curr_dt += datetime.timedelta(minutes=15)
 
     print('')
 
-calc_slots(1,1,2)
+
+calc_slots(1, 1, 2)
