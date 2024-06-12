@@ -2,7 +2,7 @@ import os
 
 from flask import Flask, request, render_template, session, redirect
 from functools import wraps
-from utils import SQLiteDatabase
+from utils import SQLiteDatabase, calc_slots
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET_KEY")
@@ -71,12 +71,27 @@ def user_funds(user_id):
 @app.route('/user/reservations', methods=['GET', 'POST'])
 @login_required
 def user_reservations():
+    user = session.get('user', None)
     if request.method == 'GET':
         with SQLiteDatabase('db.db') as db:
-            res = db.fetch('reservations')
-        return res
-    if request.method == 'POST':
-        return f'create reservations'
+            services = db.fetch('service', columns=['id','name'], fetch_all=True)
+            reservations = db.fetch('reservation', join={'user':'reservation.user_id = user.id', 'service':'reservation.service_id = service.id', 'gym':'service.gym_id=gym.id'},
+                                    columns=['reservation.id AS reservation_id','reservation.date', 'reservation.time', 'user.login AS user_name', 'service.name As service_name', 'gym.name AS gym_name'],
+                                    condition={'user_id': user['id']}, fetch_all=True)
+
+        return render_template('reservations.html', reservations=reservations, services=services)
+
+
+    else:
+        form_dict = request.form
+        service_id = form_dict['service_id']
+        trainer_id = form_dict['trainer_id']
+        slot_id = form_dict['slot_id']
+        result = calc_slots()
+        with SQLiteDatabase('db.db') as db:
+            db.commit("reservation", {'user_id': user['id'], 'service_id': request.form.get('service_id'), 'date':request.form.get('date'),'time': request.form.get('time')})
+
+        return redirect('/user/reservations')
 
 
 @app.route('/user/reservations/<reservation_id>', methods=['GET', 'POST'])
@@ -140,6 +155,23 @@ def fitness_center_trainer_id(fitness_center_id, trainer_id):
         with SQLiteDatabase('db.db') as db:
             res = db.fetch('trainer', {'fitness_center_id': fitness_center_id, 'id': trainer_id}, fetch_all=False)
         return res
+
+
+@app.route('/pre_reservation', methods=['POST'])
+@login_required
+def pre_reservation():
+
+    trainer = request.form['trainer']
+    service = request.form['service']
+    desired_date = request.form['desired_date']
+
+    time_slots = calc_slots(trainer, service, desired_date)
+
+    return render_template('pre_reservation.html', form_info = {'trainer': trainer, 'service': service, 'desired_date': desired_date, 'time_slots': time_slots})
+
+
+
+
 
 
 @app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST'])

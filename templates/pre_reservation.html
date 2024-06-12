@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form method="post" action="/user/reservations">
+    <input hidden="trainer"  value="{{ form_info['trainer'] }}">
+    <input hidden="service"  value="{{ form_info['service'] }}">
+    <input hidden="date"  value="{{ form_info['desired_date'] }}">
+    <label for="slots">Choose a time:</label>
+    <select name="slots" id="slots">
+        {% for time in form_info['time_slots']%}
+        <option value="{{ t }}>{{ t }}"</option>
+        {% endfor %}
+    </select>
+
+    <input typy = "submit">
+</form>
+
+</body>
+</html>

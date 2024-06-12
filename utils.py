@@ -106,7 +106,7 @@ def edit(self, table, data, condition):
     self.connection.commit()
 
 
-def calc_slots(user_id, trainer_id, service_id):
+def calc_slots(trainer_id, service_id, desired_date):
     query = f""" SELECT * FROM reservation
     join service on service.id = reservation.service_id
     where trainer_id = {trainer_id}"""
@@ -114,6 +114,7 @@ def calc_slots(user_id, trainer_id, service_id):
         booked_time = db.fetch("reservation", {"trainer_id": trainer_id, "date": "25.10.2024"}, join={'service': 'service.id = reservation.service_id'})
         trainer_schedule = db.fetch("trainer_schedule", {"trainer_id": trainer_id, "date": "25.10.2024"}, fetch_all=False)
         trainer_capacity = db.fetch("trainer_services", {"trainer_id": trainer_id, "service_id": service_id}, fetch_all=False)
+        service_info = db.fetch('service', {'service_id': id}, fetch_all=False)
         start_dt = datetime.datetime.strptime(trainer_schedule["date"]+' '+trainer_schedule["start_time"], '%d.%m.%Y %H:%M')
         end_dt = datetime.datetime.strptime(trainer_schedule["date"]+' '+trainer_schedule["end_time"], '%d.%m.%Y %H:%M')
         curr_dt = start_dt
@@ -132,6 +133,31 @@ def calc_slots(user_id, trainer_id, service_id):
                 if curr_dt in trainer_schedule:
                     trainer_schedule[curr_dt] -= 1
                 curr_dt += datetime.timedelta(minutes=15)
+        result_times = []
+        service_duration = service_info["duration"]
+        service_start_time = start_dt
+        while service_start_time < end_dt:
+            service_end_time = service_start_time + datetime.timedelta(minutes=service_duration)
+            everything_is_free = True
+            iter_start_time = service_start_time
+            while iter_start_time < service_end_time:
+                if trainer_schedule[iter_start_time] == 0 or service_start_time > end_dt:
+                    everything_is_free = False
+                    break
+                iter_start_time += datetime.timedelta(minutes=15)
+
+            if everything_is_free:
+                result_times.append(service_start_time)
+
+            service_start_time += datetime.timedelta(minutes=15)
+        final_result = [datetime.datetime.strftime(el, '%H:%M') for el in result_times]
+        return final_result
+
+
+
+
+
+
 
     print('')
 

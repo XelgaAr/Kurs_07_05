@@ -20,6 +20,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -61,9 +62,10 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "DefaultHtmlFileTemplate": "HTML File",
-    "Flask server.Flask (main.py).executor": "Debug",
+    "Flask server.Flask (main.py).executor": "Run",
     "Flask server.Flask (main.py:flask).executor": "Debug",
     "Python.main.executor": "Run",
+    "Python.number.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
@@ -74,7 +76,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "vcs.Subversion",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -88,7 +90,7 @@
     ]
   }
 }]]></component>
-  <component name="RunManager" selected="Flask server.Flask (main.py)">
+  <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="pythonProject" />
       <option name="ENV_FILES" value="" />
@@ -173,7 +175,9 @@
       <workItem from="1717496038143" duration="5857000" />
       <workItem from="1717591006201" duration="1453000" />
       <workItem from="1717858370575" duration="11315000" />
-      <workItem from="1717870812291" duration="1857000" />
+      <workItem from="1717870812291" duration="6445000" />
+      <workItem from="1718018826069" duration="9826000" />
+      <workItem from="1718204195466" duration="10585000" />
     </task>
     <task id="LOCAL-00001" summary="Dz_1">
       <option name="closed" value="true" />
@@ -263,7 +267,23 @@
       <option name="project" value="LOCAL" />
       <updated>1717871433177</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Dz_7.1">
+      <option name="closed" value="true" />
+      <created>1717872725056</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1717872725056</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Dz_10">
+      <option name="closed" value="true" />
+      <created>1718216120732</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1718216120732</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -277,22 +297,12 @@
     <MESSAGE value="Dz_5 added user_info" />
     <MESSAGE value="Dz_5.1" />
     <MESSAGE value="Dz_7" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dz_7" />
+    <MESSAGE value="Dz_7.1" />
+    <MESSAGE value="Dz_10" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dz_10" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>135</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/utils.py</url>
-          <line>132</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
@@ -305,6 +315,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/pythonProject$main.coverage" NAME="main Coverage Results" MODIFIED="1716146182228" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_flask_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1716143369913" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
-    <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1717870839642" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pythonProject$Flask__main_py_.coverage" NAME="Flask (main.py) Coverage Results" MODIFIED="1718204268460" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pythonProject$number.coverage" NAME="number Coverage Results" MODIFIED="1718215806891" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
