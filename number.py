@@ -18,7 +18,7 @@ def action_function(num_start, num_end, name):
         second_sum = sum(int(i) for i in second_part)
         if first_sum == second_sum:
             count += 1
-    logging.info(f"{name} finishing, start {int(num_start)}, end {int(num_end)}, count {count}")
+    logging.info(f"{name} finishing, start {int(num_start)}, end {int(num_end)}, count {count} ")
 
 
 if __name__ == "__main__":
