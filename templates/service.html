@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Service Details</h2>
+<table class="table">
+    <tr><th>Service Name</th><td>{{ service.name }}</td></tr>
+    <tr><th>Description</th><td>{{ service.description }}</td></tr>
+    <tr><th>Duration</th><td>{{ service.duration }} minutes</td></tr>
+    <tr><th>Price</th><td>${{ service.price }}</td></tr>
+    <tr><th>Max Attendees</th><td>{{ service.max_attendees }}</td></tr>
+    <tr><th>Fitness Center</th><td>{{ service.fitness_center_name }}</td></tr>
+</table>
+
+{% if user_login %}
+<h2>Book a Session</h2>
+<form method="post" action="/pre_reservation">
+    <input type="hidden" name="service_id" value="{{ service.service_id }}">
+
+    <div class="mb-3">
+        <label for="trainer" class="form-label">Choose a Trainer:</label>
+        <select name="trainer_id" id="trainer" class="form-select">
+            {% for trainer in trainers %}
+            <option value="{{ trainer.id }}">{{ trainer.name }} (Capacity: {{ trainer.capacity }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="date" class="form-label">Choose a Date:</label>
+        <input type="date" id="date" name="date" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Book</button>
+</form>
+{% endif %}
+{% endblock %}

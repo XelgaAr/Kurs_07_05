@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Trainer Profile: {{ trainer.name }}</h1>
+
+{% if services %}
+<form action="/pre_reservation" method="post" class="my-3">
+    <input type="hidden" name="trainer_id" value="{{ trainer.id }}">
+    <input type="hidden" name="fitness_center_id" value="{{ trainer.fitness_center_id }}">
+
+    <div class="mb-3">
+        <label for="service" class="form-label">Choose a Service:</label>
+        <select name="service_id" id="service" class="form-select">
+            {% for service in services %}
+            <option value="{{ service.id }}">{{ service.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="date" class="form-label">Choose a Date:</label>
+        <input type="date" id="date" name="date" class="form-control" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Book Appointment</button>
+</form>
+{% else %}
+<p>This trainer currently has no services listed.</p>
+{% endif %}
+{% endblock %}

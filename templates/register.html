@@ -1,23 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <title>Title</title>
+{% extends 'base.html' %}
 
-  </head>
-  <body>
-  <form action="/register" method="POST">
-  <label for="login">login:</label><br>
-  <input type="text" id="login" name="login"><br>
-  <label for="password">password:</label><br>
-  <input type="password" id="password" name="password"><br>
-  <label for="birth_date">birth_date:</label><br>
-  <input type="date" id="birth_date" name="birth_date"><br>
-  <label for="phone">phone:</label><br>
-  <input type="text" id="phone" name="phone"><br>
+{% block content %}
+<h1>Register</h1>
 
-  <input type="submit" value="Submit">
-  </form>
+<form action="/register" method="POST" class="my-3">
+    <div class="mb-3">
+        <label for="login" class="form-label">Login:</label>
+        <input type="text" id="login" name="login" class="form-control">
+    </div>
 
-  </body>
-</html>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" id="password" name="password" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label for="birth_date" class="form-label">Birth Date:</label>
+        <input type="date" id="birth_date" name="birth_date" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label for="phone" class="form-label">Phone:</label>
+        <input type="text" id="phone" name="phone" class="form-control">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock %}

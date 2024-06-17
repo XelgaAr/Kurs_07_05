@@ -1,10 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-</body>
-</html>
+{% block content %}
+<h2>Your Reservations</h2>
+<table class="table">
+    <tr>
+        <th>Reservation ID</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Service</th>
+        <th>Fitness Center</th>
+    </tr>
+    {% for reservation in reservations %}
+    <tr>
+        <td>{{ reservation.reservation_id }}</td>
+        <td>{{ reservation.date }}</td>
+        <td>{{ reservation.time }}</td>
+        <td>{{ reservation.service_name }}</td>
+        <td>{{ reservation.fitness_center_name }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

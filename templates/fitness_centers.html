@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h1>Fitness Centers</h1>
+    <div class="list-group">
+        {% for center in fitness_centers %}
+            <a href="/fitness_center/{{ center.id }}" class="list-group-item list-group-item-action">
+                <h5 class="mb-1">{{ center.name }}</h5>
+                <p class="mb-1">{{ center.address }}</p>
+                <small>{{ center.contacts }}</small>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

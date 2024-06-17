@@ -1,18 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <title>Title</title>
+{% extends 'base.html' %}
 
-  </head>
-  <body>
-  <form action="/login" method="POST">
-  <label for="login">login:</label><br>
-  <input type="text" id="login" name="login"><br>
-  <label for="password">password:</label><br>
-  <input type="password" id="password" name="password">
-  <input type="submit" value="enter">
-  </form>
+{% block content %}
+<h1>Login</h1>
 
-  </body>
-</html>
+<form action="/login" method="POST" class="my-3">
+    <div class="mb-3">
+        <label for="login" class="form-label">Login:</label>
+        <input type="text" id="login" name="login" class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Password:</label>
+        <input type="password" id="password" name="password" class="form-control">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enter</button>
+</form>
+{% endblock %}

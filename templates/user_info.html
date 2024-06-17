@@ -1,22 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>User Information</title>
-</head>
-<body>
-    <h1>User Information</h1>
-    <p>
-        <strong>Login:</strong> {{user_info.login}}
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>User Information</h1>
+
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Profile Details</h5>
+    <p class="card-text">
+        <strong>Login:</strong> {{ user_info.login }}
     </p>
-    <p>
-        <strong>Phone:</strong> {{user_info.phone}}
+    <p class="card-text">
+        <strong>Phone:</strong> {{ user_info.phone }}
     </p>
-    <p>
-        <strong>Birth Date:</strong> {{user_info.birth_date}}
+    <p class="card-text">
+        <strong>Birth Date:</strong> {{ user_info.birth_date }}  <!-- Format date output -->
     </p>
-    <p>
-        <strong>Funds:</strong> {{user_info.funds}}
+    <p class="card-text">
+        <strong>Funds:</strong> ${{ user_info.funds }}  <!-- Format funds output -->
     </p>
-</body>
-</html>
+  </div>
+</div>
+{% endblock %}

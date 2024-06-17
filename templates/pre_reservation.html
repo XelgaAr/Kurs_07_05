@@ -1,23 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-<form method="post" action="/user/reservations">
-    <input hidden="trainer"  value="{{ form_info['trainer'] }}">
-    <input hidden="service"  value="{{ form_info['service'] }}">
-    <input hidden="date"  value="{{ form_info['desired_date'] }}">
-    <label for="slots">Choose a time:</label>
-    <select name="slots" id="slots">
-        {% for time in form_info['time_slots']%}
-        <option value="{{ t }}>{{ t }}"</option>
-        {% endfor %}
-    </select>
+{% extends 'base.html' %}
 
-    <input typy = "submit">
+{% block content %}
+<h1>Book Your Reservation</h1>
+
+<form method="post" action="/user/reservations" class="my-3">
+    <input type="hidden" name="trainer_id" value="{{ form_info['trainer_id'] }}">
+    <input type="hidden" name="service_id" value="{{ form_info['service_id'] }}">
+    <input type="hidden" name="date" value="{{ form_info['date'] }}">
+
+    <div class="mb-3">
+        <label for="slots" class="form-label">Choose a time:</label>
+        <select name="slots" id="slots" class="form-select">
+            {% for time in form_info['time_slots'] %}
+            <option value="{{ time }}">{{ time }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
 </form>
-
-</body>
-</html>
+{% endblock %}
