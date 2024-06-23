@@ -1,18 +1,23 @@
 import datetime
 import os
+import models
 
+from sqlalchemy import select
 from flask import Flask, request, render_template, session, redirect
 from functools import wraps
 from utils import SQLiteDatabase, calc_slots
+from database import init_db, db_session, shutdown_session
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET_KEY")
 
+with app.app_context():
+    init_db()
 
-def check_credentials(username, password):
-    with SQLiteDatabase('db.db') as db:
-        user = db.fetch('user', {'login': username, 'password': password}, fetch_all=False)
-    return user is not None
+
+@app.teardown_appcontext
+def cleanup(exception=None):
+    shutdown_session()
 
 
 def login_required(func):
@@ -75,7 +80,8 @@ def user_reservations():
                          'fitness_center.name AS fitness_center_name'],
                 condition={'user_id': user_id})
 
-        return render_template('reservations.html', reservations=reservations, services=services, user_login=session.get('user_login'))
+        return render_template('reservations.html', reservations=reservations, services=services,
+                               user_login=session.get('user_login'))
 
     if request.method == 'POST':
         with SQLiteDatabase('db.db') as db:
@@ -121,7 +127,8 @@ def user_checkout():
 def fitness_center():
     with SQLiteDatabase('db.db') as db:
         res = db.fetch('fitness_center')
-    return render_template('fitness_centers.html', fitness_centers=res, user_login=session.get('user_login'), title='Fitness Centers')
+    return render_template('fitness_centers.html', fitness_centers=res, user_login=session.get('user_login'),
+                           title='Fitness Centers')
 
 
 @app.route('/fitness_center/<int:fitness_center_id>', methods=['GET'])
@@ -155,10 +162,13 @@ def service_info(fitness_center_id, service_id):
                 columns=['trainer.id', 'trainer.name', 'trainer_services.capacity'])
 
             if not trainers:
-                return render_template('error.html', error_message="Trainers not found for current fitness center and service.", user_login=session.get('user_login')), 404
+                return render_template('error.html',
+                                       error_message="Trainers not found for current fitness center and service.",
+                                       user_login=session.get('user_login')), 404
 
             if service:
-                return render_template('service.html', service=service, trainers=trainers, user_login=session.get('user_login'))
+                return render_template('service.html', service=service, trainers=trainers,
+                                       user_login=session.get('user_login'))
             else:
                 return 'Service not found'
 
@@ -234,6 +244,15 @@ def fitness_center_services(fitness_center_id):
         return f'Info about services in fitness center with id :{fitness_center_id}:<br>{info}'
 
 
+def check_credentials(username, password):
+    user = db_session.query(models.User).filter_by(login=username, password=password).first()
+    # user = database.session.execute(select(models.User).where(models.User.login==username, models.User.password==password)).first()[0]
+
+    # with SQLiteDatabase('db.db') as db:
+    #     user = db.fetch('user', {'login': username, 'password': password}, fetch_all=False)
+    return user
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def get_login():
     if request.method == 'GET':
@@ -241,12 +260,11 @@ def get_login():
     if request.method == 'POST':
         login = request.form['login']
         password = request.form['password']
-        if check_credentials(login, password):
-            with SQLiteDatabase('db.db') as db:
-                user = db.fetch("user", {'login': login}, fetch_all=False)
-                session['user_id'] = user['id']
-                session['user_login'] = user['login']
-            return redirect(f'/')
+        user = check_credentials(login, password)
+        if user is not None:
+            session['user_id'] = user.id
+            session['user_login'] = user.login
+            return redirect('/')
         else:
             return 'Incorrect login or password'
 
@@ -265,10 +283,15 @@ def register():
         return render_template('register.html')
     if request.method == 'POST':
         form_data = request.form
-        with SQLiteDatabase('db.db') as db:
-            db.insert("user", {'login': form_data['login'], 'password': form_data['password'],
-                               'birth_date': form_data['birth_date'], 'phone': form_data['phone']})
-        return f'you are registered'
+        user = models.User(login=form_data['login'], password=form_data['password'],
+                           birth_date=datetime.datetime.strptime(form_data['birth_date'], "%Y-%M-%d"),
+                           phone=form_data['phone'])
+        db_session.add(user)
+        db_session.commit()
+
+        session['user_id'] = user.id
+        session['user_login'] = user.login
+        return redirect('/')
 
 
 @app.route('/user/resources', methods=['GET'])
