@@ -2,11 +2,11 @@ import datetime
 import os
 import models
 
-from sqlalchemy import select
-from flask import Flask, request, render_template, session, redirect
+from flask import Flask, request, render_template, session, redirect, url_for, jsonify
 from functools import wraps
-from utils import SQLiteDatabase, calc_slots
+from utils import calc_slots
 from database import init_db, db_session, shutdown_session
+from models import *
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET_KEY")
@@ -42,13 +42,14 @@ def index():
 def user_info():
     user_id = session.get('user_id')
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch("user", {'id': user_id}, ["login", "phone", "birth_date", "funds"],
-                           fetch_all=False)
-        return render_template('user_info.html', user_info=res, user_login=session.get('user_login'))
+        user = db_session.query(User).filter(User.id == user_id).first()
+        if user:
+            return render_template('user_info.html', user_info=user, user_login=session.get('user_login'))
+        else:
+            return render_template('error.html', error_message="User not found!", user_login=session.get('user_login'))
 
     if request.method == 'POST':
-        return f'change user info'
+        return 'Change user info'
 
 
 @app.route('/user/funds', methods=['GET', 'POST'])
@@ -56,12 +57,14 @@ def user_info():
 def user_funds():
     user_id = session.get('user_id')
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch('user', {'id': user_id}, fetch_all=False)
-        return render_template('funds.html', funds=res['funds'])
+        user = db_session.query(User).filter(User.id == user_id).first()
+        if user:
+            return render_template('funds.html', funds=user.funds)
+        else:
+            return render_template('error.html', error_message="User not found!", user_login=session.get('user_login'))
 
-    if request.method == 'POST':
-        return f'add funds'
+    elif request.method == 'POST':
+        return 'add funds'
 
 
 @app.route('/user/reservations', methods=['GET', 'POST'])
@@ -69,54 +72,83 @@ def user_funds():
 def user_reservations():
     user_id = session.get('user_id')
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            services = db.fetch('service', columns=['id', 'name'])
-            reservations = db.fetch(
-                'reservation',
-                join={'user': 'reservation.user_id = user.id', 'service': 'reservation.service_id = service.id',
-                      'fitness_center': 'service.fitness_center_id=fitness_center.id'},
-                columns=['reservation.id AS reservation_id', 'reservation.date', 'reservation.time',
-                         'user.login AS user_name', 'service.name As service_name',
-                         'fitness_center.name AS fitness_center_name'],
-                condition={'user_id': user_id})
+        services = db_session.query(Service).all()
+
+        reservations = db_session.query(
+            Reservation.id.label('reservation_id'),
+            Reservation.date,
+            Reservation.time,
+            User.login.label('user_name'),
+            Service.name.label('service_name'),
+            FitnessCenter.name.label('fitness_center_name')
+        ).join(User, Reservation.user_id == User.id) \
+            .join(Service, Reservation.service_id == Service.id) \
+            .join(FitnessCenter, Service.fitness_center_id == FitnessCenter.id) \
+            .filter(Reservation.user_id == user_id) \
+            .all()
 
         return render_template('reservations.html', reservations=reservations, services=services,
                                user_login=session.get('user_login'))
 
-    if request.method == 'POST':
-        with SQLiteDatabase('db.db') as db:
-            db.insert("reservation", {'user_id': user_id, 'service_id': request.form.get('service_id'),
-                                      'trainer_id': request.form.get('trainer_id'), 'date': request.form.get('date'),
-                                      'time': request.form.get('slots')})
+    elif request.method == 'POST':
+        new_reservation = Reservation(
+            user_id=user_id,
+            service_id=request.form.get('service_id'),
+            trainer_id=request.form.get('trainer_id'),
+            date=request.form.get('date'),
+            time=request.form.get('slots')
+        )
+        db_session.add(new_reservation)
+        db_session.commit()
 
         return redirect('/user/reservations')
 
 
-@app.route('/user/reservations/<reservation_id>', methods=['GET', 'POST'])
+@app.route('/user/reservations/<int:reservation_id>', methods=['GET', 'POST'])
 @login_required
 def user_reservations_id(reservation_id):
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch('reservation', {'id': reservation_id}, fetch_all=False)
-        return res
-
+        reservation = db_session.query(Reservation).filter_by(id=reservation_id).join(User).join(Trainer).join(
+            Service).first()
+        if reservation:
+            return render_template('reservation_details.html', reservation=reservation,
+                                   user_login=session.get('user_login'))
+        else:
+            return render_template('error.html', error_message="Reservation not found",
+                                   user_login=session.get('user_login'))
     if request.method == 'POST':
         return f'create reservation with id: {reservation_id}'
 
 
-@app.route('/user/reservations/<reservation_id>/delete', methods=['GET'])
+@app.route('/user/reservations/<int:reservation_id>/delete',
+           methods=['POST'])
 @login_required
 def user_reservations_delete(reservation_id):
-    return 0
+    reservation = db_session.query(Reservation).get(reservation_id)
+    if reservation:
+        db_session.delete(reservation)
+        db_session.commit()
+        return jsonify({'status': 'success', 'message': 'Reservation deleted successfully'})
+    else:
+        return jsonify({'status': 'error', 'message': 'Reservation not found'}), 404
 
 
 @app.route('/user/checkout', methods=['GET', 'POST', 'PUT'])
 @login_required
 def user_checkout():
     if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch('checkout')
-        return res
+        checkouts = db_session.query(Reservation).all()
+        reservations_json = [
+            {
+                'id': checkout.id,
+                'date': checkout.date.strftime("%Y-%m-%d"),
+                'trainer_id': checkout.trainer_id,
+                'start_time': checkout.start_time.strftime("%H:%M"),
+                'end_time': checkout.end_time.strftime("%H:%M")
+            }
+            for checkout in checkouts
+        ]
+        return jsonify(reservations_json)
     if request.method == 'POST':
         return f'create user checkout'
     if request.method == 'PUT':
@@ -125,21 +157,20 @@ def user_checkout():
 
 @app.route('/fitness_centers', methods=['GET'])
 def fitness_center():
-    with SQLiteDatabase('db.db') as db:
-        res = db.fetch('fitness_center')
-    return render_template('fitness_centers.html', fitness_centers=res, user_login=session.get('user_login'),
-                           title='Fitness Centers')
+    fitness_centers = db_session.query(FitnessCenter).all()
+    return render_template('fitness_centers.html', fitness_centers=fitness_centers,
+                           user_login=session.get('user_login'), title='Fitness Centers')
 
 
 @app.route('/fitness_center/<int:fitness_center_id>', methods=['GET'])
 def fitness_center_id(fitness_center_id):
-    with SQLiteDatabase('db.db') as db:
-        fitness_center = db.fetch('fitness_center', {'id': fitness_center_id}, fetch_all=False)
-        if not fitness_center:
-            return "Fitness center not found", 404
+    fitness_center = db_session.query(FitnessCenter).filter_by(id=fitness_center_id).first()
+    if not fitness_center:
+        return render_template('error.html', error_message="Fitness center not found",
+                               user_login=session.get('user_login')), 404
 
-        services = db.fetch('service', {'fitness_center_id': fitness_center_id}, fetch_all=True)
-        trainers = db.fetch('trainer', {'fitness_center_id': fitness_center_id}, fetch_all=True)
+    services = db_session.query(Service).filter_by(fitness_center_id=fitness_center_id).all()
+    trainers = db_session.query(Trainer).filter_by(fitness_center_id=fitness_center_id).all()
 
     return render_template('fitness_center_details.html', fitness_center=fitness_center, services=services,
                            trainers=trainers, user_login=session.get('user_login'))
@@ -147,58 +178,50 @@ def fitness_center_id(fitness_center_id):
 
 @app.route('/fitness_center/<int:fitness_center_id>/services/<int:service_id>', methods=['GET'])
 def service_info(fitness_center_id, service_id):
-    if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            service = db.fetch(
-                'service', {'fitness_center_id': fitness_center_id, 'service_id': service_id},
-                join={'fitness_center': 'service.fitness_center_id = fitness_center.id'},
-                columns=['service.id AS service_id', 'service.name', 'service.duration', 'service.price',
-                         'service.description', 'service.max_attendees', 'fitness_center.name AS fitness_center_name'],
-                fetch_all=False)
+    service = (db_session.query(
+        Service.id.label('service_id'),
+        Service.name,
+        Service.duration,
+        Service.price,
+        Service.description,
+        Service.max_attendees,
+        FitnessCenter.name.label('fitness_center_name')
+    ).join(FitnessCenter)
+     .filter(Service.id == service_id, Service.fitness_center_id == fitness_center_id).first())
 
-            trainers = db.fetch(
-                'trainer_services', {'service_id': service_id},
-                join={'trainer': 'trainer.id = trainer_services.trainer_id'},
-                columns=['trainer.id', 'trainer.name', 'trainer_services.capacity'])
+    if not service:
+        return render_template('error.html', error_message="Service not found",
+                               user_login=session.get('user_login')), 404
 
-            if not trainers:
-                return render_template('error.html',
-                                       error_message="Trainers not found for current fitness center and service.",
-                                       user_login=session.get('user_login')), 404
+    trainers = (db_session.query(
+        Trainer.id,
+        Trainer.name,
+        TrainerServices.capacity
+    ).join(TrainerServices, TrainerServices.trainer_id == Trainer.id)
+     .filter(TrainerServices.service_id == service_id).all())
 
-            if service:
-                return render_template('service.html', service=service, trainers=trainers,
-                                       user_login=session.get('user_login'))
-            else:
-                return 'Service not found'
+    if not trainers:
+        return render_template('error.html', error_message="Trainers not found for current fitness center and service.",
+                               user_login=session.get('user_login')), 404
 
-
-@app.route('/fitness_center/<fitness_center_id>/trainer', methods=['GET'])
-def fitness_center_trainer(fitness_center_id):
-    if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch('trainer', {'id': fitness_center_id})
-        return res
+    return render_template('service.html', service=service, trainers=trainers, user_login=session.get('user_login'))
 
 
 @app.route('/fitness_center/<int:fitness_center_id>/trainer/<int:trainer_id>', methods=['GET'])
 def fitness_center_trainer_id(fitness_center_id, trainer_id):
-    if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            trainer = db.fetch('trainer', {'fitness_center_id': fitness_center_id, 'id': trainer_id}, fetch_all=False)
-            if not trainer:
-                return render_template('Trainer not found', user_login=session.get('user_login')), 404
+    trainer = db_session.query(Trainer).filter_by(fitness_center_id=fitness_center_id, id=trainer_id).first()
+    if not trainer:
+        return render_template('error.html', error_message="Trainer not found",
+                               user_login=session.get('user_login')), 404
 
-            services = db.fetch(
-                'trainer_services',
-                {'trainer_id': trainer_id},
-                join={'service': 'trainer_services.service_id = service.id'},
-                columns=['service.id', 'service.name', 'service.description'])
+    services = (db_session.query(Service.id, Service.name, Service.description)
+                .join(TrainerServices, Service.id == TrainerServices.service_id)
+                .filter(TrainerServices.trainer_id == trainer_id).all())
 
-            if services is None:
-                services = []
+    if not services:
+        services = []
 
-        return render_template('trainer.html', trainer=trainer, services=services, user_login=session.get('user_login'))
+    return render_template('trainer.html', trainer=trainer, services=services, user_login=session.get('user_login'))
 
 
 @app.route('/pre_reservation', methods=['POST'])
@@ -208,7 +231,7 @@ def pre_reservation():
     trainer_id = request.form['trainer_id']
     service_id = request.form['service_id']
     desired_date = request.form['date']
-    formatted_date = datetime.datetime.strptime(desired_date, "%Y-%m-%d").strftime("%d.%m.%Y")
+    formatted_date = datetime.datetime.strptime(desired_date, "%Y-%m-%d")
 
     time_slots = calc_slots(trainer_id, service_id, formatted_date, user_id)
 
@@ -220,36 +243,35 @@ def pre_reservation():
                                       'time_slots': time_slots}, user_login=session.get('user_login'))
 
 
-@app.route('/trainer/<trainer_id>/rating', methods=['GET', 'POST'])
+@app.route('/trainer/<int:trainer_id>/rating', methods=['GET', 'POST'])
 @login_required
 def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
-        return render_template('rating.html', user_login=session.get('user_login'))
+        current_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'), trainer_id=trainer_id).first()
+        return render_template('rating.html', user_login=session.get('user_login'), current_rating=current_rating)
+
     if request.method == 'POST':
         form_data = request.form
-        with SQLiteDatabase('db.db') as db:
-            user_found = db.fetch('user', {'login': form_data['login'], 'password': form_data['password']},
-                                  fetch_all=False)
-            db.insert("rating", {'user_id': user_found['id'],
-                                 'points': form_data['points'], 'text': form_data['text'],
-                                 'trainer_id': form_data['trainer_id']})
-        return f'created rating trainer with id:{trainer_id}'
+        existing_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'), trainer_id=trainer_id).first()
+        if existing_rating:
+            return render_template('error.html', error_message="You have already rated this trainer.",
+                                   user_login=session.get('user_login')), 404
 
+        new_rating = Rating(
+            user_id=session.get('user_id'),
+            trainer_id=trainer_id,
+            points=form_data['points'],
+            text=form_data['text']
+        )
+        db_session.add(new_rating)
+        db_session.commit()
 
-@app.route('/fitness_center/<fitness_center_id>/services', methods=['GET'])
-def fitness_center_services(fitness_center_id):
-    if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            info = db.fetch('service', {'fitness_center_id': fitness_center_id})
-        return f'Info about services in fitness center with id :{fitness_center_id}:<br>{info}'
+        return redirect(url_for('fitness_center_trainer_id_rating', trainer_id=trainer_id))
 
 
 def check_credentials(username, password):
     user = db_session.query(models.User).filter_by(login=username, password=password).first()
     # user = database.session.execute(select(models.User).where(models.User.login==username, models.User.password==password)).first()[0]
-
-    # with SQLiteDatabase('db.db') as db:
-    #     user = db.fetch('user', {'login': username, 'password': password}, fetch_all=False)
     return user
 
 
@@ -284,7 +306,7 @@ def register():
     if request.method == 'POST':
         form_data = request.form
         user = models.User(login=form_data['login'], password=form_data['password'],
-                           birth_date=datetime.datetime.strptime(form_data['birth_date'], "%Y-%M-%d"),
+                           birth_date=datetime.datetime.strptime(form_data['birth_date'], "%Y-%m-%d"),
                            phone=form_data['phone'])
         db_session.add(user)
         db_session.commit()
@@ -298,7 +320,11 @@ def register():
 @login_required
 def user_resources():
     user_id = session.get('user_id')
-    if request.method == 'GET':
-        with SQLiteDatabase('db.db') as db:
-            res = db.fetch('resources', {'user_id': user_id})
-        return res or 'No info about current user resources'
+    if user_id:
+        resources = db_session.query(Resources).filter_by(user_id=user_id).all()
+        if resources:
+            return render_template('resources.html', resources=resources, user_login=session.get('user_login'))
+        else:
+            return render_template('error.html', error_message="No info about current user resources", user_login=session.get('user_login')), 404
+    else:
+        return render_template('error.html', error_message="User not identified", user_login=session.get('user_login')), 404

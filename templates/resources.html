@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Your Resources</h2>
+    {% if resources %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Resource ID</th>
+                <th>Service ID</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for resource in resources %}
+            <tr>
+                <td>{{ resource.id }}</td>
+                <td>{{ resource.service_id }}</td>
+                <td>{{ resource.amount }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No resources available.</p>
+    {% endif %}
+</div>
+{% endblock %}

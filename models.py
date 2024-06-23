@@ -14,6 +14,8 @@ class User(Base):
     funds = Column(Integer, default=0, nullable=False)
 
     resources = relationship("Resources", back_populates="user")
+    reservation = relationship("Reservation", back_populates="user")
+    rating = relationship("Rating", back_populates="user")
 
     def __init__(self, login, password, birth_date, phone):
         self.login = login
@@ -39,6 +41,9 @@ class FitnessCenter(Base):
     address = Column(String(300), nullable=False)
     contacts = Column(String(300), nullable=False)
 
+    trainer = relationship("Trainer", back_populates="fitness_center")
+    service = relationship("Service", back_populates="fitness_center")
+
     def __init__(self, name, address, contacts):
         self.name = name
         self.address = address
@@ -52,6 +57,13 @@ class Trainer(Base):
     fitness_center_id = Column(Integer, ForeignKey(FitnessCenter.id), nullable=False)
     age = Column(Integer)
     sex = Column(String(50), nullable=False)
+
+    fitness_center = relationship("FitnessCenter", back_populates="trainer")
+    trainer_services = relationship("TrainerServices", back_populates="trainer")
+    trainer_schedule = relationship("TrainerSchedule", back_populates="trainer")
+    rating = relationship("Rating", back_populates="trainer")
+    reservation = relationship("Reservation", back_populates="trainer")
+    checkout = relationship("Checkout", back_populates="trainer")
 
     def __init__(self, name, fitness_center_id, age, sex):
         self.name = name
@@ -70,6 +82,11 @@ class Service(Base):
     fitness_center_id = Column(Integer, ForeignKey(FitnessCenter.id), nullable=False)
     max_attendees = Column(Integer, default=1, nullable=False)
 
+    fitness_center = relationship("FitnessCenter", back_populates="service")
+    resources = relationship("Resources", back_populates="service")
+    trainer_services = relationship("TrainerServices", back_populates="service")
+    reservation = relationship("Reservation", back_populates="service")
+
     def __init__(self, name, duration, description, price, fitness_center_id, max_attendance):
         self.name = name
         self.duration = duration
@@ -86,6 +103,9 @@ class TrainerServices(Base):
     service_id = Column(Integer, ForeignKey(Service.id), nullable=False)
     capacity = Column(Integer, nullable=False)
 
+    trainer = relationship("Trainer", back_populates="trainer_services")
+    service = relationship("Service", back_populates="trainer_services")
+
     def __init__(self, trainer_id, service_id, capacity):
         self.trainer_id = trainer_id
         self.service_id = service_id
@@ -99,6 +119,8 @@ class TrainerSchedule(Base):
     trainer_id = Column(Integer, ForeignKey(Trainer.id), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
+
+    trainer = relationship("Trainer", back_populates="trainer_schedule")
 
     def __init__(self, date, trainer_id, start_time, end_time):
         self.date = date
@@ -132,6 +154,10 @@ class Reservation(Base):
     date = Column(DateTime, nullable=False)
     time = Column(Time, nullable=False)
 
+    user = relationship("User", back_populates="reservation")
+    trainer = relationship("Trainer", back_populates="reservation")
+    service = relationship("Service", back_populates="reservation")
+
     def __init__(self, user_id, service_id, trainer_id, date, time):
         self.user_id = user_id
         self.trainer_id = trainer_id
@@ -148,6 +174,9 @@ class Rating(Base):
     points = Column(Integer, nullable=False)
     text = Column(String(500))
 
+    user = relationship("User", back_populates="rating")
+    trainer = relationship("Trainer", back_populates="rating")
+
     def __init__(self, user_id, trainer_id, points, text):
         self.user_id = user_id
         self.trainer_id = trainer_id
@@ -162,6 +191,8 @@ class Checkout(Base):
     trainer_id = Column(Integer, ForeignKey(Trainer.id), nullable=False)
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
+
+    trainer = relationship("Trainer", back_populates="checkout")
 
     def __init__(self, date, trainer_id, start_time, end_time):
         self.date = date

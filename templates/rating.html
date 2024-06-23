@@ -1,34 +1,23 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block content %}
-<h1>Submit Your Rating</h1>
-
-<form action="/rating" method="POST" class="my-3">
-    <div class="mb-3">
-        <label for="login" class="form-label">Login:</label>
-        <input type="text" id="login" name="login" class="form-control">
-    </div>
-
-    <div class="mb-3">
-        <label for="password" class="form-label">Password:</label>
-        <input type="password" id="password" name="password" class="form-control">
-    </div>
-
-    <div class="mb-3">
-        <label for="points" class="form-label">Points:</label>
-        <input type="number" id="points" name="points" class="form-control">
-    </div>
-
-    <div class="mb-3">
-        <label for="text" class="form-label">Feedback Text:</label>
-        <input type="text" id="text" name="text" class="form-control">
-    </div>
-
-    <div class="mb-3">
-        <label for="trainer_id" class="form-label">Trainer ID:</label>
-        <input type="number" id="trainer_id" name="trainer_id" class="form-control">
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+<div class="container">
+    <h2>Rate Your Trainer</h2>
+    {% if current_rating %}
+    <h4>Current Rating: {{ current_rating.points }}</h4>
+    <p>{{ current_rating.text }}</p>
+    {% else %}
+    <form action="" method="post">
+        <div class="form-group">
+            <label for="points">Rating (1-5):</label>
+            <input type="number" class="form-control" name="points" id="points" required>
+        </div>
+        <div class="form-group">
+            <label for="text">Review:</label>
+            <textarea class="form-control" name="text" id="text" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Rating</button>
+    </form>
+    {% endif %}
+</div>
 {% endblock %}

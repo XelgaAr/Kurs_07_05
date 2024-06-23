@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <h5 class="card-header">Reservation Details</h5>
+        <div class="card-body">
+            <h5 class="card-title">Service Information</h5>
+            <p class="card-text">Service: {{ reservation.service_id }}</p>
+            <p class="card-text">Date: {{ reservation.date.strftime("%Y-%m-%d") }}</p>
+            <p class="card-text">Time: {{ reservation.time.strftime("%H:%M") }}</p>
+
+            <h5 class="card-title">Trainer Information</h5>
+            <p class="card-text">Trainer ID: {{ reservation.trainer_id }}</p>
+
+            <h5 class="card-title">User Information</h5>
+            <p class="card-text">User ID: {{ reservation.user_id }}</p>
+
+            <a href="#" class="btn btn-primary">Edit Reservation</a>
+            <a href="#" class="btn btn-danger">Cancel Reservation</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
