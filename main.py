@@ -95,8 +95,8 @@ def user_reservations():
             user_id=user_id,
             service_id=request.form.get('service_id'),
             trainer_id=request.form.get('trainer_id'),
-            date=request.form.get('date'),
-            time=request.form.get('slots')
+            date=datetime.datetime.strptime(request.form.get('date'), '%Y-%m-%d %H:%M:%S'),
+            time=datetime.datetime.strptime(request.form.get('slots'), '%H:%M').time()
         )
         db_session.add(new_reservation)
         db_session.commit()

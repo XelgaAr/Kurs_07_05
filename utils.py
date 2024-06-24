@@ -8,6 +8,7 @@ from models import Reservation, TrainerSchedule, TrainerServices, Service
 def calc_slots(trainer_id, service_id, desired_date, user_id):
     start_of_day = desired_date.replace(hour=0, minute=0, second=0, microsecond=0)
     end_of_day = desired_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    formatted_date = desired_date.strftime('%Y-%m-%d')
 
     booked_times = db_session.query(Reservation).filter(
         Reservation.trainer_id == trainer_id,
@@ -16,7 +17,7 @@ def calc_slots(trainer_id, service_id, desired_date, user_id):
 
     trainer_schedule = db_session.query(TrainerSchedule).filter(
         TrainerSchedule.trainer_id == trainer_id,
-        TrainerSchedule.date == desired_date
+        TrainerSchedule.date == formatted_date
     ).first()
 
     trainer_capacity = db_session.query(TrainerServices).filter(
@@ -31,7 +32,7 @@ def calc_slots(trainer_id, service_id, desired_date, user_id):
     if not trainer_schedule or not trainer_capacity or not service_info:
         error_message = "Missing required info:"
         if not trainer_schedule:
-            error_message += f" No schedule found for the trainer on {desired_date.strftime('%Y-%m-%d')}."
+            error_message += f" No schedule found for the trainer on {formatted_date}."
         if not trainer_capacity:
             error_message += " No capacity information found for the trainer and service."
         if not service_info:
