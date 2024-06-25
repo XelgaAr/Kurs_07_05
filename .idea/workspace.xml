@@ -82,7 +82,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "reference.settingsdialog.IDE.editor.colors.Language Defaults",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -197,7 +197,8 @@
       <workItem from="1718961960866" duration="11225000" />
       <workItem from="1718973292783" duration="7254000" />
       <workItem from="1719047322319" duration="24991000" />
-      <workItem from="1719228021478" duration="5550000" />
+      <workItem from="1719228021478" duration="5764000" />
+      <workItem from="1719308458950" duration="4471000" />
     </task>
     <task id="LOCAL-00001" summary="Dz_1">
       <option name="closed" value="true" />
@@ -343,7 +344,15 @@
       <option name="project" value="LOCAL" />
       <updated>1719233424278</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="Dz_10.4">
+      <option name="closed" value="true" />
+      <created>1719233836807</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1719233836807</updated>
+    </task>
+    <option name="localTasksCounter" value="20" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -374,7 +383,8 @@
     <MESSAGE value="Dz_8" />
     <MESSAGE value="Dz_10.2" />
     <MESSAGE value="Dz_10.3" />
-    <option name="LAST_COMMIT_MESSAGE" value="Dz_10.3" />
+    <MESSAGE value="Dz_10.4" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dz_10.4" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -187,7 +187,7 @@ def service_info(fitness_center_id, service_id):
         Service.max_attendees,
         FitnessCenter.name.label('fitness_center_name')
     ).join(FitnessCenter)
-     .filter(Service.id == service_id, Service.fitness_center_id == fitness_center_id).first())
+               .filter(Service.id == service_id, Service.fitness_center_id == fitness_center_id).first())
 
     if not service:
         return render_template('error.html', error_message="Service not found",
@@ -198,7 +198,7 @@ def service_info(fitness_center_id, service_id):
         Trainer.name,
         TrainerServices.capacity
     ).join(TrainerServices, TrainerServices.trainer_id == Trainer.id)
-     .filter(TrainerServices.service_id == service_id).all())
+                .filter(TrainerServices.service_id == service_id).all())
 
     if not trainers:
         return render_template('error.html', error_message="Trainers not found for current fitness center and service.",
@@ -247,12 +247,14 @@ def pre_reservation():
 @login_required
 def fitness_center_trainer_id_rating(trainer_id):
     if request.method == 'GET':
-        current_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'), trainer_id=trainer_id).first()
+        current_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'),
+                                                            trainer_id=trainer_id).first()
         return render_template('rating.html', user_login=session.get('user_login'), current_rating=current_rating)
 
     if request.method == 'POST':
         form_data = request.form
-        existing_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'), trainer_id=trainer_id).first()
+        existing_rating = db_session.query(Rating).filter_by(user_id=session.get('user_id'),
+                                                             trainer_id=trainer_id).first()
         if existing_rating:
             return render_template('error.html', error_message="You have already rated this trainer.",
                                    user_login=session.get('user_login')), 404
@@ -325,6 +327,12 @@ def user_resources():
         if resources:
             return render_template('resources.html', resources=resources, user_login=session.get('user_login'))
         else:
-            return render_template('error.html', error_message="No info about current user resources", user_login=session.get('user_login')), 404
+            return render_template('error.html', error_message="No info about current user resources",
+                                   user_login=session.get('user_login')), 404
     else:
-        return render_template('error.html', error_message="User not identified", user_login=session.get('user_login')), 404
+        return render_template('error.html', error_message="User not identified",
+                               user_login=session.get('user_login')), 404
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
