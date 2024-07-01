@@ -7,6 +7,8 @@ from functools import wraps
 from utils import calc_slots
 from database import init_db, db_session, shutdown_session
 from models import *
+from send_mail import send_mail
+
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET_KEY")
@@ -100,6 +102,8 @@ def user_reservations():
         )
         db_session.add(new_reservation)
         db_session.commit()
+
+        send_mail("my5454@gmail.com", "Reservation", "You have reserved your service successfully!")
 
         return redirect('/user/reservations')
 
@@ -315,6 +319,9 @@ def register():
 
         session['user_id'] = user.id
         session['user_login'] = user.login
+
+        send_mail("my5454@gmail.com", "You are registered", "Thank you for the registration")
+
         return redirect('/')
 
 
@@ -335,4 +342,4 @@ def user_resources():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True )
