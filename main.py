@@ -103,7 +103,7 @@ def user_reservations():
         db_session.add(new_reservation)
         db_session.commit()
 
-        send_mail("my5454@gmail.com", "Reservation", "You have reserved your service successfully!")
+        send_mail.delay("my5454@gmail.com", "Reservation", "You have reserved your service successfully!")
 
         return redirect('/user/reservations')
 
@@ -320,7 +320,7 @@ def register():
         session['user_id'] = user.id
         session['user_login'] = user.login
 
-        send_mail("my5454@gmail.com", "You are registered", "Thank you for the registration")
+        send_mail.delay("my5454@gmail.com", "You are registered", "Thank you for the registration")
 
         return redirect('/')
 

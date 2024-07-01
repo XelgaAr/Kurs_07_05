@@ -1,6 +1,6 @@
 import os
 
-from celery import Celery
+from celery import Celery, shared_task
 
 app = Celery('tasks', broker='pyamqp://guest@localhost//')
 
@@ -11,6 +11,7 @@ def add(x, y):
     return x + y
 
 
+@shared_task()
 def send_mail(recipient, subject, text):
     import smtplib, ssl
 
