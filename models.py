@@ -16,6 +16,8 @@ class User(Base):
     resources = relationship("Resources", back_populates="user")
     reservation = relationship("Reservation", back_populates="user")
     rating = relationship("Rating", back_populates="user")
+    profile_image = Column(String(150), nullable=True)
+    email = Column(String(150), nullable=False)
 
     def __init__(self, login, password, birth_date, phone):
         self.login = login

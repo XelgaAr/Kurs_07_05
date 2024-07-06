@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    command: python3 main.py
+    environment:
+      DB_HOST: project_database
+      RABBIT_HOST: rabbit
+
+celery_worker:
+    build: .
+    command: celery -A celery_worker worker --loglevel=INFO
+    environment:
+      DB_HOST: project_database
+      RABBIT_HOST: rabbit
+
+db:
+  image: "postgres"
+  environment:
+    POSTGRES_PASSWORD: example
+  ports:
+    -5432:5432
+  hostname: project_database
+
+rabbit_mq:
+  image: "rabbitmq:3-management"
+  ports:
+    - 15672:15672
+    - 5672:5672
+  hostname: rabbit

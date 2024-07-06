@@ -1,9 +1,13 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-engine = create_engine('sqlite:///db.db', echo=True)
+# DB_STRING = f'sqlite:///db.db'
+DB_STRING = f'postgresql+psycopg2://postgres:example@{os.environ.get("DB_HOST", "localhost")}:5432'
 
+engine = create_engine(DB_STRING, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 db_session = scoped_session(SessionLocal)
