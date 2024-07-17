@@ -1,32 +1,32 @@
 import os
-
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from celery import Celery, shared_task
 
-app = Celery('tasks', broker='pyamqp://guest@localhost//')
+app = Celery('tasks', broker=f'pyamqp://guest@{os.environ.get("RABBIT_HOST", "localhost")}:5432')
 
 
 @app.task
-def add(x, y):
-    print(x + y)
-    return x + y
-
-
-@shared_task()
 def send_mail(recipient, subject, text):
-    import smtplib, ssl
+    import ssl
+    import smtplib
 
     port = 587  # For starttls
     smtp_server = "smtp.gmail.com"
-    sender_email = "my5454@gmail.com"
+    sender_email = "jttjdev@gmail.com"
     receiver_email = recipient
     password = os.environ.get("EMAIL_PASSWORD")
-    message = text
+
+    message = MIMEMultipart()
+    message["From"] = sender_email
+    message["To"] = receiver_email
+    message["Subject"] = subject
+    message.attach(MIMEText(text, "plain"))
 
     context = ssl.create_default_context()
-    context = ssl.SSLContext(ssl.PROTOCOL_SSLv2)
     with smtplib.SMTP(host=smtp_server, port=port) as server:
-        server.ehlo()  # Can be omitted
+        server.ehlo()
         server.starttls(context=context)
-        server.ehlo()  # Can be omitted
+        server.ehlo()
         server.login(sender_email, password)
-        server.sendmail(sender_email, receiver_email, message)
+        server.sendmail(sender_email, receiver_email, message.as_string())

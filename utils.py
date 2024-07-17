@@ -1,5 +1,4 @@
 import datetime
-import sqlite3
 
 from database import db_session
 from models import Reservation, TrainerSchedule, TrainerServices, Service
